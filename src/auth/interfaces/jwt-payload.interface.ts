@@ -1,7 +1,7 @@
 export interface JwtPayload {
-  id: string;
+  sub: string;
   email: string;
-  type: 'user' | 'admin';
-  role?: string;
+  role: 'SUPER_ADMIN' | 'STORE_ADMIN' | 'USER';
+  storeId?: string;
   permissions?: Record<string, string[]>;
 }

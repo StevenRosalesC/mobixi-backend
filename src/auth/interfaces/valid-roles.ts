@@ -1,6 +1,5 @@
 export enum ValidRoles {
   SUPER_ADMIN = 'SUPER_ADMIN',
-  ADMIN = 'ADMIN',
-  MODERATOR = 'MODERATOR',
+  STORE_ADMIN = 'STORE_ADMIN',
   USER = 'USER',
 }

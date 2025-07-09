@@ -50,16 +50,6 @@ export class CreateProductDto {
   price: number;
 
   @ApiProperty({
-    description: 'Precio de costo del producto',
-    example: 35.0,
-    minimum: 0,
-  })
-  @IsNumber()
-  @Min(0)
-  @Transform(({ value }) => parseFloat(value))
-  costPrice: number;
-
-  @ApiProperty({
     description: 'Tipo de producto',
     enum: ProductType,
     example: ProductType.PHYSICAL,
@@ -92,6 +82,13 @@ export class CreateProductDto {
   @IsOptional()
   @Transform(({ value }) => parseInt(value))
   maxSubscriptions?: number;
+
+  @ApiProperty({
+    description: 'ID de la tienda',
+    example: 'store_001',
+  })
+  @IsString()
+  storeId: string;
 }
 
 export class UpdateProductDto {
@@ -129,17 +126,6 @@ export class UpdateProductDto {
   @IsOptional()
   @Transform(({ value }) => parseFloat(value))
   price?: number;
-
-  @ApiPropertyOptional({
-    description: 'Precio de costo del producto',
-    example: 40.0,
-    minimum: 0,
-  })
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
-  @Transform(({ value }) => parseFloat(value))
-  costPrice?: number;
 
   @ApiPropertyOptional({
     description: 'Tipo de producto',
@@ -207,7 +193,7 @@ export class ProductQueryDto {
     enum: ProductType,
     example: ProductType.PHYSICAL,
   })
-  @IsEnum(ProductType)
+  @IsEnum(ProductType, { message: 'type must be PHYSICAL, DIGITAL or HYBRID' })
   @IsOptional()
   type?: ProductType;
 

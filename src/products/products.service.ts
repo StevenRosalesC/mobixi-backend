@@ -1,7 +1,7 @@
 import {
   Injectable,
   NotFoundException,
-  ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -9,24 +9,45 @@ import {
   UpdateProductDto,
   ProductQueryDto,
 } from './dto/product.dto';
+import { Prisma } from '@prisma/client';
+import { AuthRole } from '../auth/dto/auth.dto';
+import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto, user: JwtPayload) {
+    // Validate store access for StoreAdmin
+    if (
+      user.role === AuthRole.STORE_ADMIN &&
+      user.storeId !== createProductDto.storeId
+    ) {
+      throw new ForbiddenException(
+        'You can only create products for your store',
+      );
+    }
+
     const product = await this.prisma.product.create({
-      data: createProductDto,
+      data: {
+        ...createProductDto,
+        price: new Prisma.Decimal(createProductDto.price),
+      },
     });
 
     return product;
   }
 
-  async findAll(query: ProductQueryDto) {
+  async findAll(query: ProductQueryDto, user?: JwtPayload) {
     const { search, category, type, isActive, page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.ProductWhereInput = {};
+
+    // Filter by store for StoreAdmin and User
+    if (user && user.role !== AuthRole.SUPER_ADMIN) {
+      where.storeId = user.storeId;
+    }
 
     if (search) {
       where.OR = [
@@ -68,10 +89,21 @@ export class ProductsService {
     };
   }
 
-  async findOne(id: string) {
-    const product = await this.prisma.product.findUnique({
-      where: { id },
-    });
+  async findOne(id: string, user?: JwtPayload) {
+    const where: Prisma.ProductWhereUniqueInput = { id };
+
+    // Filter by store for StoreAdmin and User
+    if (user && user.role !== AuthRole.SUPER_ADMIN) {
+      const product = await this.prisma.product.findFirst({
+        where: { id, storeId: user.storeId },
+      });
+      if (!product) {
+        throw new NotFoundException('Product not found');
+      }
+      return product;
+    }
+
+    const product = await this.prisma.product.findUnique({ where });
 
     if (!product) {
       throw new NotFoundException('Product not found');
@@ -80,32 +112,51 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto) {
-    // Check if product exists
-    const existingProduct = await this.prisma.product.findUnique({
-      where: { id },
-    });
+  async update(
+    id: string,
+    updateProductDto: UpdateProductDto,
+    user: JwtPayload,
+  ) {
+    // Check if product exists and user has access
+    const existingProduct = await this.findOne(id, user);
 
-    if (!existingProduct) {
-      throw new NotFoundException('Product not found');
+    // Validate store access for StoreAdmin
+    if (
+      user.role === AuthRole.STORE_ADMIN &&
+      existingProduct.storeId !== user.storeId
+    ) {
+      throw new ForbiddenException(
+        'You can only update products from your store',
+      );
+    }
+
+    const updateData: any = { ...updateProductDto };
+
+    // Convert price field to Decimal if provided
+    if (updateProductDto.price !== undefined) {
+      updateData.price = new Prisma.Decimal(updateProductDto.price);
     }
 
     const product = await this.prisma.product.update({
       where: { id },
-      data: updateProductDto,
+      data: updateData,
     });
 
     return product;
   }
 
-  async remove(id: string) {
-    // Check if product exists
-    const existingProduct = await this.prisma.product.findUnique({
-      where: { id },
-    });
+  async remove(id: string, user: JwtPayload) {
+    // Check if product exists and user has access
+    const existingProduct = await this.findOne(id, user);
 
-    if (!existingProduct) {
-      throw new NotFoundException('Product not found');
+    // Validate store access for StoreAdmin
+    if (
+      user.role === AuthRole.STORE_ADMIN &&
+      existingProduct.storeId !== user.storeId
+    ) {
+      throw new ForbiddenException(
+        'You can only delete products from your store',
+      );
     }
 
     await this.prisma.product.delete({
@@ -115,9 +166,16 @@ export class ProductsService {
     return { message: 'Product deleted successfully' };
   }
 
-  async getActiveProducts() {
+  async getActiveProducts(user?: JwtPayload) {
+    const where: Prisma.ProductWhereInput = { isActive: true };
+
+    // Filter by store for StoreAdmin and User
+    if (user && user.role !== AuthRole.SUPER_ADMIN) {
+      where.storeId = user.storeId;
+    }
+
     return this.prisma.product.findMany({
-      where: { isActive: true },
+      where,
       orderBy: { createdAt: 'desc' },
     });
   }

@@ -1,8 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Prisma schema for Mobixi multi-tenant
 
 generator client {
   provider = "prisma-client-js"
@@ -13,140 +9,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Admin user for system management
-model Admin {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  password  String
-  firstName String    @map("first_name")
-  lastName  String    @map("last_name")
-  role      AdminRole @default(ADMIN)
-  isActive  Boolean   @default(true) @map("is_active")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-
-  @@map("admin_users")
-}
-
-// End users who subscribe to products
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  firstName String   @map("first_name")
-  lastName  String   @map("last_name")
-  phone     String?
-  address   String?
-  city      String?
-  state     String?
-  zipCode   String?  @map("zip_code")
-  country   String?  @default("Ecuador")
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  subscriptions Subscription[]
-  deliveries    Delivery[]
-  payments      Payment[]
-
-  @@map("users")
-}
-
-// Products/packages available for subscription
-model Product {
-  id               String      @id @default(cuid())
-  name             String
-  description      String?
-  price            Decimal     @db.Decimal(10, 2)
-  type             ProductType @default(PHYSICAL)
-  category         String?
-  image            String?
-  isActive         Boolean     @default(true) @map("is_active")
-  maxSubscriptions Int?        @map("max_subscriptions") // Limit of active subscriptions for this product
-  createdAt        DateTime    @default(now()) @map("created_at")
-  updatedAt        DateTime    @updatedAt @map("updated_at")
-
-  // Relations
-  subscriptions Subscription[]
-  deliveries    Delivery[]
-
-  @@map("products")
-}
-
-// User subscriptions to products
-model Subscription {
-  id                String             @id @default(cuid())
-  status            SubscriptionStatus @default(ACTIVE)
-  startDate         DateTime           @default(now()) @map("start_date")
-  endDate           DateTime?          @map("end_date")
-  nextDeliveryDate  DateTime?          @map("next_delivery_date")
-  deliveryFrequency DeliveryFrequency  @default(MONTHLY) @map("delivery_frequency")
-  totalDeliveries   Int                @default(0) @map("total_deliveries")
-  deliveredCount    Int                @default(0) @map("delivered_count")
-  notes             String?
-  createdAt         DateTime           @default(now()) @map("created_at")
-  updatedAt         DateTime           @updatedAt @map("updated_at")
-
-  // Relations
-  userId     String     @map("user_id")
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productId  String     @map("product_id")
-  product    Product    @relation(fields: [productId], references: [id])
-  deliveries Delivery[]
-  payments   Payment[]
-
-  @@map("subscriptions")
-}
-
-// Delivery history for each subscription
-model Delivery {
-  id            String         @id @default(cuid())
-  status        DeliveryStatus @default(PENDING)
-  scheduledDate DateTime       @map("scheduled_date")
-  deliveredDate DateTime?      @map("delivered_date")
-  trackingCode  String?        @map("tracking_code")
-  notes         String?
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-
-  // Relations
-  subscriptionId String       @map("subscription_id")
-  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  productId      String       @map("product_id")
-  product        Product      @relation(fields: [productId], references: [id])
-  userId         String       @map("user_id")
-  user           User         @relation(fields: [userId], references: [id])
-
-  @@map("deliveries")
-}
-
-// Payment records (manual for now, later integrate payment gateway)
-model Payment {
-  id        String        @id @default(cuid())
-  amount    Decimal       @db.Decimal(10, 2)
-  method    PaymentMethod @default(MANUAL)
-  status    PaymentStatus @default(PENDING)
-  reference String? // Payment reference or transaction ID
-  notes     String?
-  paidAt    DateTime?     @map("paid_at")
-  createdAt DateTime      @default(now()) @map("created_at")
-  updatedAt DateTime      @updatedAt @map("updated_at")
-
-  // Relations
-  userId         String        @map("user_id")
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subscriptionId String?       @map("subscription_id")
-  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
-
-  @@map("payments")
-}
-
-// Enums
 enum AdminRole {
   SUPER_ADMIN
-  ADMIN
-  MODERATOR
+  STORE_ADMIN
 }
 
 enum ProductType {
@@ -192,4 +57,146 @@ enum PaymentStatus {
   FAILED
   REFUNDED
   CANCELLED
+}
+
+model SuperAdmin {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("super_admins")
+}
+
+model Store {
+  id            String         @id @default(uuid())
+  name          String
+  address       String?
+  isActive      Boolean        @default(true) @map("is_active")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  admins        StoreAdmin[]
+  users         User[]
+  products      Product[]
+  subscriptions Subscription[]
+
+  @@map("stores")
+}
+
+model StoreAdmin {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  storeId   String   @map("store_id")
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@map("store_admins")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  firstName     String         @map("first_name")
+  lastName      String         @map("last_name")
+  isActive      Boolean        @default(true) @map("is_active")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  storeId       String         @map("store_id")
+  store         Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  subscriptions Subscription[]
+  deliveries    Delivery[]
+  payments      Payment[]
+
+  @@map("users")
+}
+
+model Product {
+  id               String         @id @default(uuid())
+  storeId          String         @map("store_id")
+  store            Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name             String
+  description      String?
+  price            Decimal        @db.Decimal(10, 2)
+  type             ProductType    @default(PHYSICAL)
+  category         String?
+  image            String?
+  isActive         Boolean        @default(true) @map("is_active")
+  maxSubscriptions Int?           @map("max_subscriptions")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  subscriptions    Subscription[]
+  deliveries       Delivery[]
+
+  @@map("products")
+}
+
+model Subscription {
+  id                String             @id @default(uuid())
+  storeId           String             @map("store_id")
+  store             Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  status            SubscriptionStatus @default(ACTIVE)
+  startDate         DateTime           @default(now()) @map("start_date")
+  endDate           DateTime?          @map("end_date")
+  nextDeliveryDate  DateTime?          @map("next_delivery_date")
+  deliveryFrequency DeliveryFrequency  @default(MONTHLY) @map("delivery_frequency")
+  totalDeliveries   Int                @default(0) @map("total_deliveries")
+  deliveredCount    Int                @default(0) @map("delivered_count")
+  notes             String?
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  userId            String             @map("user_id")
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId         String             @map("product_id")
+  product           Product            @relation(fields: [productId], references: [id])
+  deliveries        Delivery[]
+  payments          Payment[]
+
+  @@map("subscriptions")
+}
+
+model Delivery {
+  id             String         @id @default(uuid())
+  status         DeliveryStatus @default(PENDING)
+  scheduledDate  DateTime       @map("scheduled_date")
+  deliveredDate  DateTime?      @map("delivered_date")
+  trackingCode   String?        @map("tracking_code")
+  notes          String?
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  subscriptionId String         @map("subscription_id")
+  subscription   Subscription   @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  productId      String         @map("product_id")
+  product        Product        @relation(fields: [productId], references: [id])
+  userId         String         @map("user_id")
+  user           User           @relation(fields: [userId], references: [id])
+
+  @@map("deliveries")
+}
+
+model Payment {
+  id             String        @id @default(uuid())
+  amount         Decimal       @db.Decimal(10, 2)
+  method         PaymentMethod @default(MANUAL)
+  status         PaymentStatus @default(PENDING)
+  reference      String?
+  notes          String?
+  paidAt         DateTime?     @map("paid_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  userId         String        @map("user_id")
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId String?       @map("subscription_id")
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@map("payments")
 }

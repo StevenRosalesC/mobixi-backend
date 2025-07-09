@@ -1,92 +1,90 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
+
+export class SuperAdminResponseDto {
+  @ApiProperty({
+    description: 'SuperAdmin unique ID',
+    example: 'clx1234567890abcdef',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: 'SuperAdmin email',
+    example: 'superadmin@mobixi.com',
+  })
+  email: string;
+
+  @ApiProperty({ description: 'First name', example: 'Super' })
+  firstName: string;
+
+  @ApiProperty({ description: 'Last name', example: 'Admin' })
+  lastName: string;
+}
+
+export class StoreAdminResponseDto {
+  @ApiProperty({
+    description: 'StoreAdmin unique ID',
+    example: 'clx1234567890abcdef',
+  })
+  id: string;
+
+  @ApiProperty({ description: 'StoreAdmin email', example: 'admin@tienda.com' })
+  email: string;
+
+  @ApiProperty({ description: 'First name', example: 'Admin' })
+  firstName: string;
+
+  @ApiProperty({ description: 'Last name', example: 'Tienda' })
+  lastName: string;
+
+  @ApiProperty({ description: 'Store ID', example: 'store_001' })
+  storeId: string;
+}
 
 export class UserResponseDto {
   @ApiProperty({
-    description: 'ID único del usuario',
+    description: 'User unique ID',
     example: 'clx1234567890abcdef',
   })
   id: string;
 
-  @ApiProperty({
-    description: 'Email del usuario',
-    example: 'usuario@ejemplo.com',
-  })
+  @ApiProperty({ description: 'User email', example: 'user@tienda.com' })
   email: string;
 
-  @ApiProperty({
-    description: 'Nombre del usuario',
-    example: 'Juan',
-  })
+  @ApiProperty({ description: 'First name', example: 'User' })
   firstName: string;
 
-  @ApiProperty({
-    description: 'Apellido del usuario',
-    example: 'Pérez',
-  })
+  @ApiProperty({ description: 'Last name', example: 'Tienda' })
   lastName: string;
 
-  @ApiPropertyOptional({
-    description: 'Número de teléfono',
-    example: '+593991234567',
-  })
-  phone?: string;
-
-  @ApiPropertyOptional({
-    description: 'Dirección del usuario',
-    example: 'Av. Amazonas 123',
-  })
-  address?: string;
-}
-
-export class AdminResponseDto {
-  @ApiProperty({
-    description: 'ID único del administrador',
-    example: 'clx1234567890abcdef',
-  })
-  id: string;
-
-  @ApiProperty({
-    description: 'Email del administrador',
-    example: 'admin@mobixi.com',
-  })
-  email: string;
-
-  @ApiProperty({
-    description: 'Nombre del administrador',
-    example: 'Admin',
-  })
-  firstName: string;
-
-  @ApiProperty({
-    description: 'Apellido del administrador',
-    example: 'Sistema',
-  })
-  lastName: string;
-
-  @ApiProperty({
-    description: 'Rol del administrador',
-    example: 'ADMIN',
-    enum: ['SUPER_ADMIN', 'ADMIN', 'MODERATOR'],
-  })
-  role: string;
+  @ApiProperty({ description: 'Store ID', example: 'store_001' })
+  storeId: string;
 }
 
 export class AuthResponseDto {
   @ApiProperty({
-    description: 'Token JWT para autenticación',
+    description: 'JWT token for authentication',
     example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
   })
   token: string;
 
   @ApiProperty({
-    description: 'Información del usuario',
-    type: UserResponseDto,
+    description: 'SuperAdmin info',
+    type: SuperAdminResponseDto,
+    required: false,
   })
-  user?: UserResponseDto;
+  superAdmin?: SuperAdminResponseDto;
 
   @ApiProperty({
-    description: 'Información del administrador',
-    type: AdminResponseDto,
+    description: 'StoreAdmin info',
+    type: StoreAdminResponseDto,
+    required: false,
   })
-  admin?: AdminResponseDto;
+  storeAdmin?: StoreAdminResponseDto;
+
+  @ApiProperty({
+    description: 'User info',
+    type: UserResponseDto,
+    required: false,
+  })
+  user?: UserResponseDto;
 }

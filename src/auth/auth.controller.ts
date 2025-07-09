@@ -1,7 +1,14 @@
 import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto, AdminLoginDto } from './dto/auth.dto';
+import {
+  SuperAdminLoginDto,
+  SuperAdminRegisterDto,
+  StoreAdminLoginDto,
+  StoreAdminRegisterDto,
+  UserLoginDto,
+  UserRegisterDto,
+} from './dto/auth.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 
 @ApiTags('auth')
@@ -9,62 +16,108 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
+  // SuperAdmin registration (optional)
+  @Post('superadmin/register')
   @ApiOperation({
-    summary: 'Registrar nuevo usuario',
-    description: 'Crea una nueva cuenta de usuario en el sistema',
+    summary: 'Register new SuperAdmin',
+    description: 'Creates a new SuperAdmin account',
   })
-  @ApiBody({ type: RegisterDto })
+  @ApiBody({ type: SuperAdminRegisterDto })
   @ApiResponse({
     status: 201,
-    description: 'Usuario registrado exitosamente',
+    description: 'SuperAdmin registered',
     type: AuthResponseDto,
   })
-  @ApiResponse({
-    status: 409,
-    description: 'El email ya está registrado',
-  })
-  async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+  @ApiResponse({ status: 409, description: 'Email already registered' })
+  async superAdminRegister(@Body() dto: SuperAdminRegisterDto) {
+    return this.authService.superAdminRegister(dto);
   }
 
-  @Post('login')
+  // SuperAdmin login
+  @Post('superadmin/login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Iniciar sesión de usuario',
-    description: 'Autentica un usuario y devuelve un token JWT',
+    summary: 'SuperAdmin login',
+    description: 'Authenticate a SuperAdmin and return JWT',
   })
-  @ApiBody({ type: LoginDto })
+  @ApiBody({ type: SuperAdminLoginDto })
   @ApiResponse({
     status: 200,
-    description: 'Login exitoso',
+    description: 'Login successful',
     type: AuthResponseDto,
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Credenciales inválidas',
-  })
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  async superAdminLogin(@Body() dto: SuperAdminLoginDto) {
+    return this.authService.superAdminLogin(dto);
   }
 
-  @Post('admin/login')
-  @HttpCode(HttpStatus.OK)
+  // StoreAdmin registration
+  @Post('storeadmin/register')
   @ApiOperation({
-    summary: 'Iniciar sesión de administrador',
-    description: 'Autentica un administrador y devuelve un token JWT',
+    summary: 'Register new StoreAdmin',
+    description: 'Creates a new StoreAdmin for a store',
   })
-  @ApiBody({ type: AdminLoginDto })
+  @ApiBody({ type: StoreAdminRegisterDto })
   @ApiResponse({
-    status: 200,
-    description: 'Login exitoso',
+    status: 201,
+    description: 'StoreAdmin registered',
     type: AuthResponseDto,
   })
-  @ApiResponse({
-    status: 401,
-    description: 'Credenciales inválidas',
+  @ApiResponse({ status: 409, description: 'Email already registered' })
+  async storeAdminRegister(@Body() dto: StoreAdminRegisterDto) {
+    return this.authService.storeAdminRegister(dto);
+  }
+
+  // StoreAdmin login
+  @Post('storeadmin/login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'StoreAdmin login',
+    description: 'Authenticate a StoreAdmin and return JWT',
   })
-  async adminLogin(@Body() adminLoginDto: AdminLoginDto) {
-    return this.authService.adminLogin(adminLoginDto);
+  @ApiBody({ type: StoreAdminLoginDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful',
+    type: AuthResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  async storeAdminLogin(@Body() dto: StoreAdminLoginDto) {
+    return this.authService.storeAdminLogin(dto);
+  }
+
+  // User registration
+  @Post('user/register')
+  @ApiOperation({
+    summary: 'Register new User',
+    description: 'Creates a new User for a store',
+  })
+  @ApiBody({ type: UserRegisterDto })
+  @ApiResponse({
+    status: 201,
+    description: 'User registered',
+    type: AuthResponseDto,
+  })
+  @ApiResponse({ status: 409, description: 'Email already registered' })
+  async userRegister(@Body() dto: UserRegisterDto) {
+    return this.authService.userRegister(dto);
+  }
+
+  // User login
+  @Post('user/login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'User login',
+    description: 'Authenticate a User and return JWT',
+  })
+  @ApiBody({ type: UserLoginDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful',
+    type: AuthResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  async userLogin(@Body() dto: UserLoginDto) {
+    return this.authService.userLogin(dto);
   }
 }

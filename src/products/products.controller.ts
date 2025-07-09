@@ -42,6 +42,8 @@ export class ProductsController {
 
   // Public endpoints for users
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Listar productos',
     description:
@@ -78,11 +80,13 @@ export class ProductsController {
     description: 'Lista de productos obtenida exitosamente',
     type: ProductPaginationDto,
   })
-  findAll(@Query() query: ProductQueryDto) {
-    return this.productsService.findAll(query);
+  findAll(@Query() query: ProductQueryDto, @GetUser() user) {
+    return this.productsService.findAll(query, user);
   }
 
   @Get('active')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Listar productos activos',
     description: 'Obtiene una lista de todos los productos activos',
@@ -92,11 +96,13 @@ export class ProductsController {
     description: 'Lista de productos activos obtenida exitosamente',
     type: [ProductResponseDto],
   })
-  getActiveProducts() {
-    return this.productsService.getActiveProducts();
+  getActiveProducts(@GetUser() user) {
+    return this.productsService.getActiveProducts(user);
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Obtener producto por ID',
     description: 'Obtiene la información detallada de un producto específico',
@@ -115,14 +121,14 @@ export class ProductsController {
     status: 404,
     description: 'Producto no encontrado',
   })
-  findOne(@Param('id') id: string) {
-    return this.productsService.findOne(id);
+  findOne(@Param('id') id: string, @GetUser() user) {
+    return this.productsService.findOne(id, user);
   }
 
   // Admin-only endpoints
   @Post()
   @UseGuards(JwtAuthGuard, UserRoleGuard, PermissionGuard)
-  @RoleProtected(ValidRoles.ADMIN, ValidRoles.SUPER_ADMIN)
+  @RoleProtected(ValidRoles.STORE_ADMIN, ValidRoles.SUPER_ADMIN)
   @Permission('products', 'create')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
@@ -143,12 +149,12 @@ export class ProductsController {
     description: 'Sin permisos suficientes',
   })
   create(@GetUser() user, @Body() createProductDto: CreateProductDto) {
-    return this.productsService.create(createProductDto);
+    return this.productsService.create(createProductDto, user);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, UserRoleGuard, PermissionGuard)
-  @RoleProtected(ValidRoles.ADMIN, ValidRoles.SUPER_ADMIN)
+  @RoleProtected(ValidRoles.STORE_ADMIN, ValidRoles.SUPER_ADMIN)
   @Permission('products', 'update')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
@@ -182,12 +188,12 @@ export class ProductsController {
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
   ) {
-    return this.productsService.update(id, updateProductDto);
+    return this.productsService.update(id, updateProductDto, user);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, UserRoleGuard, PermissionGuard)
-  @RoleProtected(ValidRoles.ADMIN, ValidRoles.SUPER_ADMIN)
+  @RoleProtected(ValidRoles.STORE_ADMIN, ValidRoles.SUPER_ADMIN)
   @Permission('products', 'delete')
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
@@ -225,6 +231,6 @@ export class ProductsController {
     description: 'Producto no encontrado',
   })
   remove(@GetUser() user, @Param('id') id: string) {
-    return this.productsService.remove(id);
+    return this.productsService.remove(id, user);
   }
 }
