@@ -8,6 +8,7 @@ import { ProductsModule } from './products/products.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { DeliveriesModule } from './deliveries/deliveries.module';
 import { PaymentsModule } from './payments/payments.module';
+import { StoresModule } from './stores/stores.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { PaymentsModule } from './payments/payments.module';
     SubscriptionsModule,
     DeliveriesModule,
     PaymentsModule,
+    StoresModule,
   ],
   controllers: [AppController],
   providers: [AppService],
