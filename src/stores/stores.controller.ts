@@ -9,6 +9,7 @@ import { Permission } from '../auth/decorators/permission.decorator';
 import { ValidModules } from '../auth/interfaces/valid-modules';
 import { ValidActions } from '../auth/interfaces/valid-actions';
 import { GetUser } from '../auth/decorators/get-user.decorator';
+import { GetUserStores } from '../auth/decorators/get-user-stores.decorator';
 
 @ApiTags('Stores')
 @Controller('stores')
@@ -76,7 +77,7 @@ export class StoresController {
   })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden - insufficient permissions or role',
+    description: 'Forbidden - insufficient permissions',
     schema: {
       type: 'object',
       properties: {
@@ -96,7 +97,7 @@ export class StoresController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'List stores',
-    description: 'Get a paginated list of stores. Requires authentication and READ permission for stores module.',
+    description: 'Get a list of stores. SUPER_ADMIN sees all stores. STORE_ADMIN sees only their assigned stores. USER sees only their store.',
   })
   @ApiQuery({
     name: 'search',
@@ -126,6 +127,45 @@ export class StoresController {
     status: 200,
     description: 'Stores retrieved successfully',
     type: [CreateStoreDto],
+    examples: {
+      superAdmin: {
+        summary: 'Super Admin Response - All Stores',
+        value: [
+          {
+            id: 'store-123',
+            name: 'Tech Store',
+            address: '123 Main St, City, State 12345',
+            logo: 'https://techstore.com/logo.png',
+            isActive: true,
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z'
+          },
+          {
+            id: 'store-456',
+            name: 'Electronics Store',
+            address: '456 Tech Ave, City, State 12345',
+            logo: 'https://electronics.com/logo.png',
+            isActive: true,
+            createdAt: '2024-01-02T00:00:00.000Z',
+            updatedAt: '2024-01-02T00:00:00.000Z'
+          }
+        ]
+      },
+      storeAdmin: {
+        summary: 'Store Admin Response - Assigned Stores Only',
+        value: [
+          {
+            id: 'store-123',
+            name: 'Tech Store',
+            address: '123 Main St, City, State 12345',
+            logo: 'https://techstore.com/logo.png',
+            isActive: true,
+            createdAt: '2024-01-01T00:00:00.000Z',
+            updatedAt: '2024-01-01T00:00:00.000Z'
+          }
+        ]
+      }
+    }
   })
   @ApiResponse({
     status: 401,
@@ -151,8 +191,8 @@ export class StoresController {
       }
     }
   })
-  findAll() {
-    return this.storesService.findAll();
+  findAll(@GetUser() user: any, @GetUserStores() userStoreIds: string[]) {
+    return this.storesService.findAll(user.role, userStoreIds);
   }
 
   @Get(':id')
@@ -161,7 +201,7 @@ export class StoresController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Get store by ID',
-    description: 'Get detailed information of a specific store. Requires authentication and READ permission for stores module.',
+    description: 'Get detailed information of a specific store. SUPER_ADMIN can access any store. STORE_ADMIN can only access their assigned stores. USER can only access their store.',
   })
   @ApiParam({
     name: 'id',
@@ -172,6 +212,20 @@ export class StoresController {
     status: 200,
     description: 'Store retrieved successfully',
     type: CreateStoreDto,
+    examples: {
+      success: {
+        summary: 'Store Details',
+        value: {
+          id: 'store-123',
+          name: 'Tech Store',
+          address: '123 Main St, City, State 12345',
+          logo: 'https://techstore.com/logo.png',
+          isActive: true,
+          createdAt: '2024-01-01T00:00:00.000Z',
+          updatedAt: '2024-01-01T00:00:00.000Z'
+        }
+      }
+    }
   })
   @ApiResponse({
     status: 401,
@@ -187,12 +241,12 @@ export class StoresController {
   })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden - insufficient permissions',
+    description: 'Forbidden - insufficient permissions or store access denied',
     schema: {
       type: 'object',
       properties: {
         statusCode: { type: 'number', example: 403 },
-        message: { type: 'string', example: 'User does not have permission to read in stores' },
+        message: { type: 'string', example: 'You can only access your assigned stores' },
         error: { type: 'string', example: 'Forbidden' }
       }
     }
@@ -209,17 +263,17 @@ export class StoresController {
       }
     }
   })
-  findOne(@Param('id') id: string) {
-    return this.storesService.findOne(id);
+  findOne(@Param('id') id: string, @GetUser() user: any, @GetUserStores() userStoreIds: string[]) {
+    return this.storesService.findOne(id, user.role, userStoreIds);
   }
 
   @Patch(':id')
-  @Auth(ValidRoles.SUPER_ADMIN)
+  @Auth(ValidRoles.SUPER_ADMIN, ValidRoles.STORE_ADMIN)
   @Permission(ValidModules.STORES, ValidActions.UPDATE)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Update store',
-    description: 'Update an existing store. Requires SUPER_ADMIN role and UPDATE permission for stores module.',
+    description: 'Update an existing store. Requires SUPER_ADMIN or STORE_ADMIN role and UPDATE permission for stores module.',
   })
   @ApiParam({
     name: 'id',
@@ -279,7 +333,7 @@ export class StoresController {
   })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden - insufficient permissions or role',
+    description: 'Forbidden - insufficient permissions',
     schema: {
       type: 'object',
       properties: {
@@ -301,17 +355,22 @@ export class StoresController {
       }
     }
   })
-  update(@Param('id') id: string, @Body() updateStoreDto: UpdateStoreDto, @GetUser() user: any) {
-    return this.storesService.update(id, updateStoreDto, user.role, user.storeId);
+  update(
+    @Param('id') id: string, 
+    @Body() updateStoreDto: UpdateStoreDto, 
+    @GetUser() user: any,
+    @GetUserStores() userStoreIds: string[]
+  ) {
+    return this.storesService.update(id, updateStoreDto, user.role, userStoreIds);
   }
 
   @Delete(':id')
-  @Auth(ValidRoles.SUPER_ADMIN)
+  @Auth(ValidRoles.SUPER_ADMIN, ValidRoles.STORE_ADMIN)
   @Permission(ValidModules.STORES, ValidActions.DELETE)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Delete store',
-    description: 'Delete a store. Requires SUPER_ADMIN role and DELETE permission for stores module.',
+    description: 'Delete a store. Requires SUPER_ADMIN or STORE_ADMIN role and DELETE permission for stores module.',
   })
   @ApiParam({
     name: 'id',
@@ -321,12 +380,6 @@ export class StoresController {
   @ApiResponse({
     status: 200,
     description: 'Store deleted successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'Store deleted successfully' }
-      }
-    }
   })
   @ApiResponse({
     status: 401,
@@ -342,7 +395,7 @@ export class StoresController {
   })
   @ApiResponse({
     status: 403,
-    description: 'Forbidden - insufficient permissions or role',
+    description: 'Forbidden - insufficient permissions',
     schema: {
       type: 'object',
       properties: {
@@ -364,7 +417,7 @@ export class StoresController {
       }
     }
   })
-  remove(@Param('id') id: string) {
-    return this.storesService.remove(id);
+  remove(@Param('id') id: string, @GetUser() user: any, @GetUserStores() userStoreIds: string[]) {
+    return this.storesService.remove(id, user.role, userStoreIds);
   }
 }

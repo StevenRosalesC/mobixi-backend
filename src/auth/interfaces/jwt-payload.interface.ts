@@ -6,4 +6,5 @@ export interface JwtPayload {
   role: string;
   permissions: JsonValue;
   storeId?: string;
+  storeIds?: string[];
 }

@@ -26,8 +26,16 @@ export class StoreRequiredGuard implements CanActivate {
       throw new ForbiddenException('User not found');
     }
 
-    if (!user.storeId) {
-      throw new ForbiddenException('Store ID required for this operation');
+    // For STORE_ADMIN, check if they have any stores assigned
+    if (user.role === 'STORE_ADMIN') {
+      if (!user.storeIds || user.storeIds.length === 0) {
+        throw new ForbiddenException('Store IDs required for this operation');
+      }
+    } else if (user.role === 'USER') {
+      // For USER, check if they have a store assigned
+      if (!user.storeId) {
+        throw new ForbiddenException('Store ID required for this operation');
+      }
     }
 
     return true;

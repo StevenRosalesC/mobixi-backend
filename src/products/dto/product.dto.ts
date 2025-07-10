@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNumber, IsBoolean, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsNumber, IsBoolean, IsOptional, IsEnum, IsBooleanString, IsNumberString } from 'class-validator';
 
 export enum ProductType {
   PHYSICAL = 'PHYSICAL',
@@ -8,6 +8,13 @@ export enum ProductType {
 }
 
 export class CreateProductDto {
+  @ApiProperty({
+    description: 'Store ID where the product belongs',
+    example: 'store-123',
+  })
+  @IsString()
+  storeId: string;
+
   @ApiProperty({
     description: 'Product name',
     example: 'iPhone 15 Pro',
@@ -55,15 +62,6 @@ export class CreateProductDto {
   imageUrl?: string;
 
   @ApiPropertyOptional({
-    description: 'Product stock quantity (for physical products)',
-    example: 50,
-    minimum: 0,
-  })
-  @IsOptional()
-  @IsNumber()
-  stock?: number;
-
-  @ApiPropertyOptional({
     description: 'Whether the product is active/available',
     example: true,
     default: true,
@@ -73,29 +71,13 @@ export class CreateProductDto {
   isActive?: boolean;
 
   @ApiPropertyOptional({
-    description: 'Product SKU (Stock Keeping Unit)',
-    example: 'IPH15PRO-128GB-BLACK',
-  })
-  @IsOptional()
-  @IsString()
-  sku?: string;
-
-  @ApiPropertyOptional({
-    description: 'Product weight in grams (for physical products)',
-    example: 187,
+    description: 'Maximum number of subscriptions allowed for this product',
+    example: 100,
     minimum: 0,
   })
   @IsOptional()
   @IsNumber()
-  weight?: number;
-
-  @ApiPropertyOptional({
-    description: 'Product dimensions (for physical products)',
-    example: '147.7 x 71.5 x 7.85 mm',
-  })
-  @IsOptional()
-  @IsString()
-  dimensions?: string;
+  maxSubscriptions?: number;
 }
 
 export class UpdateProductDto {
@@ -150,15 +132,6 @@ export class UpdateProductDto {
   imageUrl?: string;
 
   @ApiPropertyOptional({
-    description: 'Product stock quantity',
-    example: 25,
-    minimum: 0,
-  })
-  @IsOptional()
-  @IsNumber()
-  stock?: number;
-
-  @ApiPropertyOptional({
     description: 'Whether the product is active/available',
     example: true,
   })
@@ -167,29 +140,13 @@ export class UpdateProductDto {
   isActive?: boolean;
 
   @ApiPropertyOptional({
-    description: 'Product SKU',
-    example: 'IPH15PROMAX-256GB-BLACK',
-  })
-  @IsOptional()
-  @IsString()
-  sku?: string;
-
-  @ApiPropertyOptional({
-    description: 'Product weight in grams',
-    example: 221,
+    description: 'Maximum number of subscriptions allowed for this product',
+    example: 150,
     minimum: 0,
   })
   @IsOptional()
   @IsNumber()
-  weight?: number;
-
-  @ApiPropertyOptional({
-    description: 'Product dimensions',
-    example: '159.9 x 76.7 x 8.25 mm',
-  })
-  @IsOptional()
-  @IsString()
-  dimensions?: string;
+  maxSubscriptions?: number;
 }
 
 export class ProductQueryDto {
@@ -219,30 +176,33 @@ export class ProductQueryDto {
   type?: ProductType;
 
   @ApiPropertyOptional({
-    description: 'Filter products by active status',
-    example: true,
+    description: 'Filter products by active status (true/false as string)',
+    example: 'true',
+    type: String,
   })
   @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
+  @IsBooleanString()
+  isActive?: string;
 
   @ApiPropertyOptional({
-    description: 'Page number for pagination',
-    example: 1,
+    description: 'Page number for pagination (as string)',
+    example: '1',
     minimum: 1,
+    type: String,
   })
   @IsOptional()
-  @IsNumber()
-  page?: number;
+  @IsNumberString()
+  page?: string;
 
   @ApiPropertyOptional({
-    description: 'Number of items per page',
-    example: 10,
+    description: 'Number of items per page (as string)',
+    example: '10',
     minimum: 1,
     maximum: 100,
+    type: String,
   })
   @IsOptional()
-  @IsNumber()
-  limit?: number;
+  @IsNumberString()
+  limit?: string;
 }
 

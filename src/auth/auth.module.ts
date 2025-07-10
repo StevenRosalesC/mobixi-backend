@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserRoleGuard } from './guards/user-role.guard';
 import { PermissionGuard } from './guards/permission.guard';
+import { SuperAdminRegisterGuard } from './guards/super-admin-register.guard';
 import { EmailsService } from './services/emails.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -41,6 +42,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
     JwtStrategy, 
     UserRoleGuard, 
     PermissionGuard,
+    SuperAdminRegisterGuard,
     EmailsService,
     PrismaService,
   ],

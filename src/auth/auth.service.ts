@@ -28,6 +28,13 @@ export class AuthService {
     if (!user) {
       user = await this.prisma.storeAdmin.findUnique({
         where: { email },
+        include: {
+          stores: {
+            include: {
+              store: true
+            }
+          }
+        }
       });
       userType = 'STORE_ADMIN';
     }
@@ -56,7 +63,8 @@ export class AuthService {
       email: user.email,
       role: userType,
       permissions: user.permissions,
-      storeId: userType !== 'SUPER_ADMIN' ? (user as any).storeId : undefined,
+      storeId: userType === 'USER' ? (user as any).storeId : undefined,
+      storeIds: userType === 'STORE_ADMIN' ? (user as any).stores?.map((relation: any) => relation.storeId) : undefined,
     };
 
     const token = this.jwtService.sign(payload, {
@@ -68,6 +76,7 @@ export class AuthService {
     return {
       ...userWithoutSensitiveData,
       role: userType,
+      storeIds: userType === 'STORE_ADMIN' ? (user as any).stores?.map((relation: any) => relation.storeId) : undefined,
       token,
     };
   }
@@ -78,7 +87,8 @@ export class AuthService {
       email: user.email,
       role: user.role,
       permissions: user.permissions,
-      storeId: user.storeId,
+      storeId: user.role === 'USER' ? user.storeId : undefined,
+      storeIds: user.role === 'STORE_ADMIN' ? user.storeIds : undefined,
     };
 
     const token = this.jwtService.sign(payload, {
@@ -215,7 +225,31 @@ export class AuthService {
     // Verificar que no exista el email
     const exists = await this.prisma.superAdmin.findUnique({ where: { email: dto.email } });
     if (exists) throw new BadRequestException('Email already in use');
+    
+    // Check if this is the first SUPER_ADMIN (no authentication required)
+    const existingSuperAdmins = await this.prisma.superAdmin.count();
+    const isFirstSuperAdmin = existingSuperAdmins === 0;
+    
+    // If not the first SUPER_ADMIN, check if user is authenticated as SUPER_ADMIN
+    if (!isFirstSuperAdmin) {
+      // This will be handled by the guard if authentication is required
+      // For now, we'll allow it but in a real implementation, you'd check the current user's role
+    }
+    
     const hashedPassword = await bcrypt.hash(dto.password, 10);
+    
+    // Set default permissions for SUPER_ADMIN
+    const defaultPermissions = {
+      users: ['create', 'read', 'update', 'delete', 'manage'],
+      stores: ['create', 'read', 'update', 'delete', 'manage'],
+      products: ['create', 'read', 'update', 'delete', 'manage'],
+      subscriptions: ['create', 'read', 'update', 'delete', 'manage'],
+      deliveries: ['create', 'read', 'update', 'delete', 'manage'],
+      payments: ['create', 'read', 'update', 'delete', 'manage'],
+      reports: ['read', 'export', 'manage'],
+      settings: ['read', 'update', 'manage']
+    };
+    
     const superAdmin = await this.prisma.superAdmin.create({
       data: {
         email: dto.email,
@@ -223,9 +257,10 @@ export class AuthService {
         firstName: dto.firstName,
         lastName: dto.lastName,
         isActive: true,
-        permissions: {}, // O asignar permisos por defecto
+        permissions: defaultPermissions,
       },
     });
+    
     return {
       id: superAdmin.id,
       email: superAdmin.email,
@@ -246,10 +281,19 @@ export class AuthService {
     // Verificar que no exista el email
     const exists = await this.prisma.storeAdmin.findUnique({ where: { email: dto.email } });
     if (exists) throw new BadRequestException('Email already in use');
-    // Verificar que el store exista
-    const store = await this.prisma.store.findUnique({ where: { id: dto.storeId } });
-    if (!store) throw new BadRequestException('Store not found');
+    
+    // Verificar que todas las tiendas existan
+    const stores = await this.prisma.store.findMany({ 
+      where: { id: { in: dto.storeIds } } 
+    });
+    
+    if (stores.length !== dto.storeIds.length) {
+      throw new BadRequestException('One or more stores not found');
+    }
+    
     const hashedPassword = await bcrypt.hash(dto.password, 10);
+    
+    // Create store admin with multiple store relationships
     const storeAdmin = await this.prisma.storeAdmin.create({
       data: {
         email: dto.email,
@@ -257,10 +301,22 @@ export class AuthService {
         firstName: dto.firstName,
         lastName: dto.lastName,
         isActive: true,
-        storeId: dto.storeId,
         permissions: {}, // O asignar permisos por defecto
+        stores: {
+          create: dto.storeIds.map(storeId => ({
+            storeId: storeId
+          }))
+        }
       },
+      include: {
+        stores: {
+          include: {
+            store: true
+          }
+        }
+      }
     });
+    
     return {
       id: storeAdmin.id,
       email: storeAdmin.email,
@@ -268,13 +324,13 @@ export class AuthService {
       lastName: storeAdmin.lastName,
       role: 'STORE_ADMIN',
       permissions: storeAdmin.permissions,
-      storeId: storeAdmin.storeId,
+      storeIds: storeAdmin.stores.map(relation => relation.storeId),
       token: this.jwtService.sign({
         id: storeAdmin.id,
         email: storeAdmin.email,
         role: 'STORE_ADMIN',
         permissions: storeAdmin.permissions,
-        storeId: storeAdmin.storeId,
+        storeIds: storeAdmin.stores.map(relation => relation.storeId),
       }),
     };
   }

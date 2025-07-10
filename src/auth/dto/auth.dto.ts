@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum AuthRole {
@@ -79,9 +79,14 @@ export class StoreAdminRegisterDto {
   @IsString()
   lastName: string;
 
-  @ApiProperty({ description: 'Store ID', example: 'store_001' })
-  @IsString()
-  storeId: string;
+  @ApiProperty({ 
+    description: 'Array of Store IDs', 
+    example: ['store_001', 'store_002'],
+    type: [String]
+  })
+  @IsArray()
+  @IsString({ each: true })
+  storeIds: string[];
 }
 
 // User login

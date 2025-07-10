@@ -76,14 +76,18 @@ model SuperAdmin {
 }
 
 model Store {
-  id            String         @id @default(uuid())
+  id            String            @id @default(uuid())
   name          String
+  description   String?           @map("description")
   address       String?
   logo          String?
-  isActive      Boolean        @default(true) @map("is_active")
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-  admins        StoreAdmin[]
+  phone         String?           @map("phone")
+  email         String?           @map("email")
+  website       String?           @map("website")
+  isActive      Boolean           @default(true) @map("is_active")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+  storeAdmins   StoreAdminStore[]
   users         User[]
   products      Product[]
   subscriptions Subscription[]
@@ -92,21 +96,32 @@ model Store {
 }
 
 model StoreAdmin {
-  id          String   @id @default(uuid())
-  email       String   @unique
+  id          String            @id @default(uuid())
+  email       String            @unique
   password    String
-  firstName   String   @map("first_name")
-  lastName    String   @map("last_name")
-  role        String   @default("STORE_ADMIN")
-  permissions Json     @default("{}")
-  isActive    Boolean  @default(true) @map("is_active")
+  firstName   String            @map("first_name")
+  lastName    String            @map("last_name")
+  role        String            @default("STORE_ADMIN")
+  permissions Json              @default("{}")
+  isActive    Boolean           @default(true) @map("is_active")
   resetToken  String?
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  storeId     String   @map("store_id")
-  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  stores      StoreAdminStore[]
 
   @@map("store_admins")
+}
+
+model StoreAdminStore {
+  id           String     @id @default(uuid())
+  storeAdminId String     @map("store_admin_id")
+  storeId      String     @map("store_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  storeAdmin   StoreAdmin @relation(fields: [storeAdminId], references: [id], onDelete: Cascade)
+  store        Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeAdminId, storeId])
+  @@map("store_admin_stores")
 }
 
 model User {

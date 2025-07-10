@@ -36,8 +36,12 @@ export class StoreAdminResponseDto {
   @ApiProperty({ description: 'Last name', example: 'Tienda' })
   lastName: string;
 
-  @ApiProperty({ description: 'Store ID', example: 'store_001' })
-  storeId: string;
+  @ApiProperty({ 
+    description: 'Array of Store IDs', 
+    example: ['store_001', 'store_002'],
+    type: [String]
+  })
+  storeIds: string[];
 }
 
 export class UserResponseDto {
@@ -108,10 +112,17 @@ export class AuthResponseDto {
   permissions: any;
 
   @ApiPropertyOptional({
-    description: 'Store ID (only for STORE_ADMIN and USER roles)',
+    description: 'Store ID (only for USER role)',
     example: 'store-123'
   })
   storeId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Array of Store IDs (only for STORE_ADMIN role)',
+    example: ['store-123', 'store-456'],
+    type: [String]
+  })
+  storeIds?: string[];
 
   @ApiProperty({
     description: 'JWT token for authentication',

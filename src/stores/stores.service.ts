@@ -32,32 +32,84 @@ export class StoresService {
     return toStoreResponseDto(store);
   }
 
-  async findAll(): Promise<StoreResponseDto[]> {
-    const stores = await this.prisma.store.findMany();
-    return stores.map(toStoreResponseDto);
+  async findAll(userRole: string, userStoreIds?: string[]): Promise<StoreResponseDto[]> {
+    // SUPER_ADMIN can see all stores
+    if (userRole === 'SUPER_ADMIN') {
+      const stores = await this.prisma.store.findMany();
+      return stores.map(toStoreResponseDto);
+    }
+
+    // STORE_ADMIN can only see their assigned stores
+    if (userRole === 'STORE_ADMIN' && userStoreIds && userStoreIds.length > 0) {
+      const stores = await this.prisma.store.findMany({
+        where: { id: { in: userStoreIds } }
+      });
+      return stores.map(toStoreResponseDto);
+    }
+
+    return [];
   }
 
-  async findOne(id: string): Promise<StoreResponseDto> {
+  async findOne(id: string, userRole: string, userStoreIds?: string[]): Promise<StoreResponseDto> {
     const store = await this.prisma.store.findUnique({ where: { id } });
     if (!store) throw new NotFoundException('Store not found');
-    return toStoreResponseDto(store);
+
+    // SUPER_ADMIN can access any store
+    if (userRole === 'SUPER_ADMIN') {
+      return toStoreResponseDto(store);
+    }
+
+    // STORE_ADMIN can only access their assigned stores
+    if (userRole === 'STORE_ADMIN') {
+      if (!userStoreIds || !userStoreIds.includes(id)) {
+        throw new ForbiddenException('You can only access your assigned stores');
+      }
+      return toStoreResponseDto(store);
+    }
+
+    throw new ForbiddenException('Access denied');
   }
 
   async update(
     id: string,
     dto: UpdateStoreDto,
     userRole: string,
-    userStoreId?: string,
+    userStoreIds?: string[],
   ): Promise<StoreResponseDto> {
-    // Permitir solo a SUPER_ADMIN o al STORE_ADMIN de su propia tienda
-    if (userRole !== 'SUPER_ADMIN' && userStoreId !== id) {
-      throw new ForbiddenException('You can only update your own store');
+    // SUPER_ADMIN can update any store
+    if (userRole === 'SUPER_ADMIN') {
+      const store = await this.prisma.store.update({ where: { id }, data: dto });
+      return toStoreResponseDto(store);
     }
-    const store = await this.prisma.store.update({ where: { id }, data: dto });
-    return toStoreResponseDto(store);
+
+    // STORE_ADMIN can only update their assigned stores
+    if (userRole === 'STORE_ADMIN') {
+      if (!userStoreIds || !userStoreIds.includes(id)) {
+        throw new ForbiddenException('You can only update your assigned stores');
+      }
+      const store = await this.prisma.store.update({ where: { id }, data: dto });
+      return toStoreResponseDto(store);
+    }
+
+    throw new ForbiddenException('Access denied');
   }
 
-  async remove(id: string): Promise<void> {
-    await this.prisma.store.delete({ where: { id } });
+  async remove(id: string, userRole: string, userStoreIds?: string[]): Promise<void> {
+    // SUPER_ADMIN can delete any store
+    if (userRole === 'SUPER_ADMIN') {
+      await this.prisma.store.delete({ where: { id } });
+      return;
+    }
+
+    // STORE_ADMIN can only delete their assigned stores
+    if (userRole === 'STORE_ADMIN') {
+      if (!userStoreIds || !userStoreIds.includes(id)) {
+        throw new ForbiddenException('You can only delete your assigned stores');
+      }
+      await this.prisma.store.delete({ where: { id } });
+      return;
+    }
+
+    throw new ForbiddenException('Access denied');
   }
 }

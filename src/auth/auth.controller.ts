@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, HttpCode, Headers } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, HttpCode, Headers, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { Auth } from './decorators/auth.decorator';
@@ -7,6 +7,7 @@ import { LoginDto, ForgotPasswordDto, ResetPasswordDto, SuperAdminRegisterDto, S
 import { AuthResponseDto, PasswordResetResponseDto } from './dto/auth-response.dto';
 import { AuthRole } from './dto/auth.dto';
 import { ValidRoles } from './interfaces/valid-roles';
+import { SuperAdminRegisterGuard } from './guards/super-admin-register.guard';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -17,7 +18,7 @@ export class AuthController {
   @HttpCode(200)
   @ApiOperation({
     summary: 'User login',
-    description: 'Authenticate a user (SuperAdmin, StoreAdmin, or User) and return JWT token with user information',
+    description: 'Authenticate user and return JWT token. Supports SUPER_ADMIN, STORE_ADMIN, and USER roles.',
   })
   @ApiBody({
     type: LoginDto,
@@ -73,14 +74,14 @@ export class AuthController {
         }
       },
       storeAdmin: {
-        summary: 'Store Admin Response',
+        summary: 'Store Admin Response (Multiple Stores)',
         value: {
           id: 'uuid',
           email: 'storeadmin@example.com',
           firstName: 'Store',
           lastName: 'Admin',
           role: 'STORE_ADMIN',
-          storeId: 'store-uuid',
+          storeIds: ['store-123', 'store-456'],
           permissions: {
             products: ['create', 'read', 'update', 'delete'],
             users: ['create', 'read', 'update'],
@@ -88,6 +89,24 @@ export class AuthController {
             deliveries: ['create', 'read', 'update', 'delete'],
             payments: ['read', 'update'],
             store: ['read', 'update']
+          },
+          token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        }
+      },
+      user: {
+        summary: 'Regular User Response',
+        value: {
+          id: 'uuid',
+          email: 'user@example.com',
+          firstName: 'Regular',
+          lastName: 'User',
+          role: 'USER',
+          storeId: 'store-123',
+          permissions: {
+            subscriptions: ['create', 'read', 'update'],
+            deliveries: ['read'],
+            payments: ['create', 'read'],
+            profile: ['read', 'update']
           },
           token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
         }
@@ -138,15 +157,56 @@ export class AuthController {
     description: 'Token refreshed successfully',
     type: AuthResponseDto,
     examples: {
-      success: {
-        summary: 'Token Refresh Response',
+      superAdmin: {
+        summary: 'Super Admin Token Refresh',
+        value: {
+          id: 'uuid',
+          email: 'admin@mobixi.com',
+          firstName: 'Super',
+          lastName: 'Admin',
+          role: 'SUPER_ADMIN',
+          permissions: {
+            users: ['create', 'read', 'update', 'delete', 'manage'],
+            stores: ['create', 'read', 'update', 'delete', 'manage'],
+            products: ['create', 'read', 'update', 'delete', 'manage'],
+            subscriptions: ['create', 'read', 'update', 'delete', 'manage'],
+            deliveries: ['create', 'read', 'update', 'delete', 'manage'],
+            payments: ['create', 'read', 'update', 'delete', 'manage'],
+            reports: ['read', 'export', 'manage'],
+            settings: ['read', 'update', 'manage']
+          },
+          token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        }
+      },
+      storeAdmin: {
+        summary: 'Store Admin Token Refresh (Multiple Stores)',
+        value: {
+          id: 'uuid',
+          email: 'storeadmin@example.com',
+          firstName: 'Store',
+          lastName: 'Admin',
+          role: 'STORE_ADMIN',
+          storeIds: ['store-123', 'store-456'],
+          permissions: {
+            products: ['create', 'read', 'update', 'delete'],
+            users: ['create', 'read', 'update'],
+            subscriptions: ['create', 'read', 'update', 'delete'],
+            deliveries: ['create', 'read', 'update', 'delete'],
+            payments: ['read', 'update'],
+            store: ['read', 'update']
+          },
+          token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        }
+      },
+      user: {
+        summary: 'User Token Refresh',
         value: {
           id: 'uuid',
           email: 'user@example.com',
           firstName: 'User',
           lastName: 'Name',
           role: 'USER',
-          storeId: 'store-uuid',
+          storeId: 'store-123',
           permissions: {
             subscriptions: ['create', 'read', 'update'],
             deliveries: ['read'],
@@ -307,18 +367,26 @@ export class AuthController {
   }
 
   @Post('register/super-admin')
-  @Auth(ValidRoles.SUPER_ADMIN)
-  @ApiBearerAuth('JWT-auth')
+  @UseGuards(SuperAdminRegisterGuard)
   @ApiOperation({
     summary: 'Register a new SUPER_ADMIN',
-    description: 'Creates a new SUPER_ADMIN. Only accessible by authenticated SUPER_ADMIN users.'
+    description: 'Creates a new SUPER_ADMIN. If no SUPER_ADMIN exists in the system, this endpoint is public. Otherwise, requires authentication as SUPER_ADMIN.'
   })
   @ApiBody({
     type: SuperAdminRegisterDto,
     description: 'SuperAdmin registration data',
     examples: {
-      example: {
-        summary: 'Register SuperAdmin',
+      firstAdmin: {
+        summary: 'First SuperAdmin (Public)',
+        value: {
+          email: 'admin@mobixi.com',
+          password: 'admin123',
+          firstName: 'Super',
+          lastName: 'Admin'
+        }
+      },
+      additionalAdmin: {
+        summary: 'Additional SuperAdmin (Requires Auth)',
         value: {
           email: 'superadmin2@mobixi.com',
           password: 'superadmin123',
@@ -328,8 +396,58 @@ export class AuthController {
       }
     }
   })
-  @ApiResponse({ status: 201, description: 'SuperAdmin created', type: AuthResponseDto })
-  @ApiResponse({ status: 403, description: 'Forbidden - Only SUPER_ADMIN can access' })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'SuperAdmin created successfully', 
+    type: AuthResponseDto,
+    examples: {
+      success: {
+        summary: 'SuperAdmin Created Response',
+        value: {
+          id: 'uuid',
+          email: 'admin@mobixi.com',
+          firstName: 'Super',
+          lastName: 'Admin',
+          role: 'SUPER_ADMIN',
+          permissions: {
+            users: ['create', 'read', 'update', 'delete', 'manage'],
+            stores: ['create', 'read', 'update', 'delete', 'manage'],
+            products: ['create', 'read', 'update', 'delete', 'manage'],
+            subscriptions: ['create', 'read', 'update', 'delete', 'manage'],
+            deliveries: ['create', 'read', 'update', 'delete', 'manage'],
+            payments: ['create', 'read', 'update', 'delete', 'manage'],
+            reports: ['read', 'export', 'manage'],
+            settings: ['read', 'update', 'manage']
+          },
+          token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        }
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Bad request - Invalid data or email already exists',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 400 },
+        message: { type: 'string', example: 'Email already in use' },
+        error: { type: 'string', example: 'Bad Request' }
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 403, 
+    description: 'Forbidden - Only SUPER_ADMIN can create additional SUPER_ADMINs',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 403 },
+        message: { type: 'string', example: 'Only SUPER_ADMIN can create additional SUPER_ADMINs' },
+        error: { type: 'string', example: 'Forbidden' }
+      }
+    }
+  })
   async registerSuperAdmin(@Body() dto: SuperAdminRegisterDto) {
     return this.authService.registerSuperAdmin(dto);
   }
@@ -339,25 +457,66 @@ export class AuthController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({
     summary: 'Register a new STORE_ADMIN',
-    description: 'Creates a new STORE_ADMIN for a specific store. Only accessible by authenticated SUPER_ADMIN users.'
+    description: 'Creates a new STORE_ADMIN with access to multiple stores. Only accessible by authenticated SUPER_ADMIN users.'
   })
   @ApiBody({
     type: StoreAdminRegisterDto,
-    description: 'StoreAdmin registration data',
+    description: 'StoreAdmin registration data with multiple store assignments',
     examples: {
-      example: {
-        summary: 'Register StoreAdmin',
+      singleStore: {
+        summary: 'Register StoreAdmin with Single Store',
         value: {
           email: 'admin@tienda.com',
           password: 'admin123',
           firstName: 'Admin',
           lastName: 'Tienda',
-          storeId: 'store_001'
+          storeIds: ['store-123']
+        }
+      },
+      multipleStores: {
+        summary: 'Register StoreAdmin with Multiple Stores',
+        value: {
+          email: 'multiadmin@tienda.com',
+          password: 'admin123',
+          firstName: 'Multi',
+          lastName: 'Admin',
+          storeIds: ['store-123', 'store-456', 'store-789']
         }
       }
     }
   })
-  @ApiResponse({ status: 201, description: 'StoreAdmin created', type: AuthResponseDto })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'StoreAdmin created successfully with store assignments', 
+    type: AuthResponseDto,
+    examples: {
+      success: {
+        summary: 'StoreAdmin Created Response',
+        value: {
+          id: 'uuid',
+          email: 'admin@tienda.com',
+          firstName: 'Admin',
+          lastName: 'Tienda',
+          role: 'STORE_ADMIN',
+          permissions: {},
+          storeIds: ['store-123', 'store-456'],
+          token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+        }
+      }
+    }
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Bad request - Invalid data or stores not found',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 400 },
+        message: { type: 'string', example: 'One or more stores not found' },
+        error: { type: 'string', example: 'Bad Request' }
+      }
+    }
+  })
   @ApiResponse({ status: 403, description: 'Forbidden - Only SUPER_ADMIN can access' })
   async registerStoreAdmin(@Body() dto: StoreAdminRegisterDto) {
     return this.authService.registerStoreAdmin(dto);

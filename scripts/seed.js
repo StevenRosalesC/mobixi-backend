@@ -14,11 +14,7 @@ async function seed() {
       create: {
         id: 'store-123',
         name: 'Tech Store',
-        description: 'Premium electronics store with the latest gadgets',
         address: '123 Main St, City, State 12345',
-        phone: '+1-555-0123',
-        email: 'contact@techstore.com',
-        website: 'https://techstore.com',
         logo: 'https://techstore.com/logo.png',
         isActive: true,
       },
@@ -60,7 +56,6 @@ async function seed() {
         password: storeAdminPassword,
         firstName: 'Store',
         lastName: 'Admin',
-        storeId: 'store-123',
         isActive: true,
         permissions: {
           products: ['create', 'read', 'update', 'delete'],
@@ -70,6 +65,11 @@ async function seed() {
           payments: ['read', 'update'],
           store: ['read', 'update'],
         },
+        stores: {
+          create: {
+            storeId: 'store-123'
+          }
+        }
       },
     });
     console.log('✅ STORE_ADMIN created:', storeAdmin.email);
