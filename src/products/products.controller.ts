@@ -34,7 +34,7 @@ import { ValidRoles } from '../auth/interfaces/valid-roles';
 import { ValidModules } from '../auth/interfaces/valid-modules';
 import { ValidActions } from '../auth/interfaces/valid-actions';
 
-@ApiTags('products')
+@ApiTags('Products')
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}

@@ -34,7 +34,7 @@ import { ValidRoles } from '../auth/interfaces/valid-roles';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { AuthRole } from '../auth/dto/auth.dto';
 
-@ApiTags('subscriptions')
+@ApiTags('Subscriptions')
 @Controller('subscriptions')
 @UseGuards(JwtAuthGuard, UserRoleGuard)
 @ApiBearerAuth('JWT-auth')

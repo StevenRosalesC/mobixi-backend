@@ -33,7 +33,7 @@ import { ValidRoles } from '../auth/interfaces/valid-roles';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { AuthRole } from '../auth/dto/auth.dto';
 
-@ApiTags('deliveries')
+@ApiTags('Deliveries')
 @Controller('deliveries')
 @UseGuards(JwtAuthGuard, UserRoleGuard)
 @ApiBearerAuth('JWT-auth')
