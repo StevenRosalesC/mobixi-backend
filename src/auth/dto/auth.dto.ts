@@ -26,20 +26,12 @@ export class SuperAdminLoginDto {
   password: string;
 }
 
-// SuperAdmin register (opcional, normalmente solo uno creado por seed)
 export class SuperAdminRegisterDto {
-  @ApiProperty({
-    description: 'SuperAdmin email',
-    example: 'superadmin@mobixi.com',
-  })
+  @ApiProperty({ description: 'SuperAdmin email', example: 'superadmin@mobixi.com' })
   @IsEmail()
   email: string;
 
-  @ApiProperty({
-    description: 'Password (min 6 chars)',
-    example: 'superadmin123',
-    minLength: 6,
-  })
+  @ApiProperty({ description: 'Password (min 6 chars)', example: 'superadmin123', minLength: 6 })
   @IsString()
   @MinLength(6)
   password: string;
@@ -69,17 +61,12 @@ export class StoreAdminLoginDto {
   password: string;
 }
 
-// StoreAdmin register
 export class StoreAdminRegisterDto {
   @ApiProperty({ description: 'StoreAdmin email', example: 'admin@tienda.com' })
   @IsEmail()
   email: string;
 
-  @ApiProperty({
-    description: 'Password (min 6 chars)',
-    example: 'admin123',
-    minLength: 6,
-  })
+  @ApiProperty({ description: 'Password (min 6 chars)', example: 'admin123', minLength: 6 })
   @IsString()
   @MinLength(6)
   password: string;
@@ -139,4 +126,51 @@ export class UserRegisterDto {
   @ApiProperty({ description: 'Store ID', example: 'store_001' })
   @IsString()
   storeId: string;
+}
+
+export class LoginDto {
+  @ApiProperty({
+    description: 'User email address',
+    example: 'admin@mobixi.com',
+  })
+  @IsEmail()
+  email: string;
+
+  @ApiProperty({
+    description: 'User password (minimum 6 characters)',
+    example: 'password123',
+    minLength: 6,
+  })
+  @IsString()
+  @MinLength(6)
+  password: string;
+}
+
+export class ForgotPasswordDto {
+  @ApiProperty({
+    description: 'Email address to send password reset link',
+    example: 'user@example.com',
+  })
+  @IsEmail()
+  email: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({
+    description: 'New password (minimum 6 characters)',
+    example: 'newSecurePassword123',
+    minLength: 6,
+  })
+  @IsString()
+  @MinLength(6)
+  newPassword: string;
+}
+
+export class RefreshTokenDto {
+  @ApiProperty({
+    description: 'Current JWT token to refresh',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
+  @IsString()
+  token: string;
 }

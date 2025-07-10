@@ -1,13 +1,5 @@
-import {
-  IsString,
-  IsNumber,
-  IsOptional,
-  IsBoolean,
-  Min,
-  IsEnum,
-} from 'class-validator';
-import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNumber, IsBoolean, IsOptional, IsEnum } from 'class-validator';
 
 export enum ProductType {
   PHYSICAL = 'PHYSICAL',
@@ -17,40 +9,37 @@ export enum ProductType {
 
 export class CreateProductDto {
   @ApiProperty({
-    description: 'Nombre del producto',
-    example: 'Caja Sorpresa Premium',
+    description: 'Product name',
+    example: 'iPhone 15 Pro',
+    minLength: 1,
   })
   @IsString()
   name: string;
 
-  @ApiPropertyOptional({
-    description: 'Descripción del producto',
-    example: 'Caja sorpresa con productos premium seleccionados',
+  @ApiProperty({
+    description: 'Product description',
+    example: 'Latest iPhone with advanced camera features and A17 Pro chip',
   })
   @IsString()
-  @IsOptional()
-  description?: string;
-
-  @ApiPropertyOptional({
-    description: 'Código SKU del producto',
-    example: 'CS-PREM-001',
-  })
-  @IsString()
-  @IsOptional()
-  sku?: string;
+  description: string;
 
   @ApiProperty({
-    description: 'Precio del producto',
-    example: 49.99,
+    description: 'Product price in cents (e.g., 99900 = $999.00)',
+    example: 99900,
     minimum: 0,
   })
   @IsNumber()
-  @Min(0)
-  @Transform(({ value }) => parseFloat(value))
   price: number;
 
   @ApiProperty({
-    description: 'Tipo de producto',
+    description: 'Product category',
+    example: 'electronics',
+  })
+  @IsString()
+  category: string;
+
+  @ApiProperty({
+    description: 'Product type',
     enum: ProductType,
     example: ProductType.PHYSICAL,
   })
@@ -58,174 +47,202 @@ export class CreateProductDto {
   type: ProductType;
 
   @ApiPropertyOptional({
-    description: 'Categoría del producto',
-    example: 'Premium',
+    description: 'Product image URL',
+    example: 'https://example.com/images/iphone15pro.jpg',
   })
-  @IsString()
   @IsOptional()
-  category?: string;
+  @IsString()
+  imageUrl?: string;
 
   @ApiPropertyOptional({
-    description: 'URL de la imagen del producto',
-    example: 'https://example.com/image.jpg',
-  })
-  @IsString()
-  @IsOptional()
-  image?: string;
-
-  @ApiPropertyOptional({
-    description: 'Límite máximo de suscripciones para este producto',
-    example: 100,
+    description: 'Product stock quantity (for physical products)',
+    example: 50,
     minimum: 0,
   })
-  @IsNumber()
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
-  maxSubscriptions?: number;
+  @IsNumber()
+  stock?: number;
 
-  @ApiProperty({
-    description: 'ID de la tienda',
-    example: 'store_001',
+  @ApiPropertyOptional({
+    description: 'Whether the product is active/available',
+    example: true,
+    default: true,
   })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Product SKU (Stock Keeping Unit)',
+    example: 'IPH15PRO-128GB-BLACK',
+  })
+  @IsOptional()
   @IsString()
-  storeId: string;
+  sku?: string;
+
+  @ApiPropertyOptional({
+    description: 'Product weight in grams (for physical products)',
+    example: 187,
+    minimum: 0,
+  })
+  @IsOptional()
+  @IsNumber()
+  weight?: number;
+
+  @ApiPropertyOptional({
+    description: 'Product dimensions (for physical products)',
+    example: '147.7 x 71.5 x 7.85 mm',
+  })
+  @IsOptional()
+  @IsString()
+  dimensions?: string;
 }
 
 export class UpdateProductDto {
   @ApiPropertyOptional({
-    description: 'Nombre del producto',
-    example: 'Caja Sorpresa Premium Actualizada',
+    description: 'Product name',
+    example: 'iPhone 15 Pro Max',
   })
-  @IsString()
   @IsOptional()
+  @IsString()
   name?: string;
 
   @ApiPropertyOptional({
-    description: 'Descripción del producto',
-    example: 'Caja sorpresa con productos premium seleccionados actualizada',
+    description: 'Product description',
+    example: 'Updated description with new features',
   })
-  @IsString()
   @IsOptional()
+  @IsString()
   description?: string;
 
   @ApiPropertyOptional({
-    description: 'Código SKU del producto',
-    example: 'CS-PREM-002',
-  })
-  @IsString()
-  @IsOptional()
-  sku?: string;
-
-  @ApiPropertyOptional({
-    description: 'Precio del producto',
-    example: 59.99,
+    description: 'Product price in cents',
+    example: 109900,
     minimum: 0,
   })
-  @IsNumber()
-  @Min(0)
   @IsOptional()
-  @Transform(({ value }) => parseFloat(value))
+  @IsNumber()
   price?: number;
 
   @ApiPropertyOptional({
-    description: 'Tipo de producto',
-    enum: ProductType,
-    example: ProductType.PHYSICAL,
+    description: 'Product category',
+    example: 'smartphones',
   })
-  @IsEnum(ProductType)
   @IsOptional()
-  type?: ProductType;
-
-  @ApiPropertyOptional({
-    description: 'Categoría del producto',
-    example: 'Premium Plus',
-  })
   @IsString()
-  @IsOptional()
   category?: string;
 
   @ApiPropertyOptional({
-    description: 'URL de la imagen del producto',
-    example: 'https://example.com/updated-image.jpg',
+    description: 'Product type',
+    enum: ProductType,
+    example: ProductType.PHYSICAL,
   })
-  @IsString()
   @IsOptional()
-  image?: string;
+  @IsEnum(ProductType)
+  type?: ProductType;
 
   @ApiPropertyOptional({
-    description: 'Estado activo del producto',
+    description: 'Product image URL',
+    example: 'https://example.com/images/iphone15promax.jpg',
+  })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @ApiPropertyOptional({
+    description: 'Product stock quantity',
+    example: 25,
+    minimum: 0,
+  })
+  @IsOptional()
+  @IsNumber()
+  stock?: number;
+
+  @ApiPropertyOptional({
+    description: 'Whether the product is active/available',
     example: true,
   })
-  @IsBoolean()
   @IsOptional()
+  @IsBoolean()
   isActive?: boolean;
 
   @ApiPropertyOptional({
-    description: 'Límite máximo de suscripciones para este producto',
-    example: 150,
+    description: 'Product SKU',
+    example: 'IPH15PROMAX-256GB-BLACK',
+  })
+  @IsOptional()
+  @IsString()
+  sku?: string;
+
+  @ApiPropertyOptional({
+    description: 'Product weight in grams',
+    example: 221,
     minimum: 0,
   })
-  @IsNumber()
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
-  maxSubscriptions?: number;
+  @IsNumber()
+  weight?: number;
+
+  @ApiPropertyOptional({
+    description: 'Product dimensions',
+    example: '159.9 x 76.7 x 8.25 mm',
+  })
+  @IsOptional()
+  @IsString()
+  dimensions?: string;
 }
 
 export class ProductQueryDto {
   @ApiPropertyOptional({
-    description: 'Término de búsqueda (nombre, descripción)',
-    example: 'premium',
+    description: 'Search term to filter products by name or description',
+    example: 'iphone',
   })
-  @IsString()
   @IsOptional()
+  @IsString()
   search?: string;
 
   @ApiPropertyOptional({
-    description: 'Filtrar por categoría',
-    example: 'Premium',
+    description: 'Filter products by category',
+    example: 'electronics',
   })
-  @IsString()
   @IsOptional()
+  @IsString()
   category?: string;
 
   @ApiPropertyOptional({
-    description: 'Filtrar por tipo de producto',
+    description: 'Filter products by type',
     enum: ProductType,
     example: ProductType.PHYSICAL,
   })
-  @IsEnum(ProductType, { message: 'type must be PHYSICAL, DIGITAL or HYBRID' })
   @IsOptional()
+  @IsEnum(ProductType)
   type?: ProductType;
 
   @ApiPropertyOptional({
-    description: 'Filtrar por estado activo',
+    description: 'Filter products by active status',
     example: true,
   })
-  @IsBoolean()
   @IsOptional()
-  @Transform(({ value }) => value === 'true')
+  @IsBoolean()
   isActive?: boolean;
 
   @ApiPropertyOptional({
-    description: 'Número de página',
+    description: 'Page number for pagination',
     example: 1,
-    default: 1,
     minimum: 1,
   })
-  @IsNumber()
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
-  page?: number = 1;
+  @IsNumber()
+  page?: number;
 
   @ApiPropertyOptional({
-    description: 'Número de elementos por página',
+    description: 'Number of items per page',
     example: 10,
-    default: 10,
     minimum: 1,
     maximum: 100,
   })
-  @IsNumber()
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
-  limit?: number = 10;
+  @IsNumber()
+  limit?: number;
 }
+

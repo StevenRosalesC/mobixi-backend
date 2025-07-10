@@ -1,7 +1,9 @@
+import { JsonValue } from '@prisma/client/runtime/library';
+
 export interface JwtPayload {
-  sub: string;
+  id: string;
   email: string;
-  role: 'SUPER_ADMIN' | 'STORE_ADMIN' | 'USER';
+  role: string;
+  permissions: JsonValue;
   storeId?: string;
-  permissions?: Record<string, string[]>;
 }

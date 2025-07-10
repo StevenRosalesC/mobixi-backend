@@ -1,20 +1,16 @@
-// Main auth module exports
 export * from './auth.module';
 export * from './auth.service';
 export * from './auth.controller';
-
-// Guards
-export * from './guards';
-
-// Decorators
-export * from './decorators';
-
-// DTOs
-export * from './dto';
-
-// Interfaces
-export * from './interfaces';
-
-// JWT
-export * from './jwt.strategy';
-export * from './jwt-auth.guard';
+export * from './strategies/jwt.strategy';
+export * from './guards/user-role.guard';
+export * from './guards/permission.guard';
+export * from './decorators/auth.decorator';
+export * from './decorators/permission.decorator';
+export * from './decorators/role-protected.decorator';
+export * from './decorators/get-user.decorator';
+export * from './interfaces/jwt-payload.interface';
+export * from './interfaces/valid-roles';
+export * from './interfaces/valid-modules';
+export * from './interfaces/valid-actions';
+export * from './dto/auth.dto';
+export * from './dto/auth-response.dto';

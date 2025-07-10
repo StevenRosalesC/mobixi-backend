@@ -32,7 +32,7 @@ import { UserRoleGuard } from '../auth/guards/user-role.guard';
 import { RoleProtected } from '../auth/decorators/role-protected/role-protected.decorator';
 import { ValidRoles } from '../auth/interfaces/valid-roles';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
+import { AuthRole } from '../auth/dto/auth.dto';
 
 @ApiTags('subscriptions')
 @Controller('subscriptions')
@@ -61,11 +61,11 @@ export class SubscriptionsController {
   @ApiResponse({ status: 404, description: 'User or product not found' })
   async create(
     @Body() createSubscriptionDto: CreateSubscriptionDto,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<SubscriptionResponseDto> {
     const subscription = await this.subscriptionsService.create(
       createSubscriptionDto,
-      user.role,
+      user.role as AuthRole,
       user.storeId,
     );
     return subscription;
@@ -124,11 +124,11 @@ export class SubscriptionsController {
   })
   async findAll(
     @Query() query: SubscriptionQueryDto,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<SubscriptionListResponseDto> {
     const result = await this.subscriptionsService.findAll(
       query,
-      user.role as ValidRoles,
+      user.role as AuthRole,
       user.storeId,
     );
     return result;
@@ -158,9 +158,9 @@ export class SubscriptionsController {
     status: 403,
     description: 'Forbidden - insufficient permissions',
   })
-  async getStats(@GetUser() user: JwtPayload) {
+  async getStats(@GetUser() user: any) {
     return await this.subscriptionsService.getSubscriptionStats(
-      user.role as ValidRoles,
+      user.role as AuthRole,
       user.storeId,
     );
   }
@@ -183,11 +183,11 @@ export class SubscriptionsController {
   @ApiResponse({ status: 404, description: 'Subscription not found' })
   async findOne(
     @Param('id') id: string,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<SubscriptionWithRelationsResponseDto> {
     const subscription = await this.subscriptionsService.findOne(
       id,
-      user.role as ValidRoles,
+      user.role as AuthRole,
       user.storeId,
     );
     return subscription;
@@ -214,12 +214,12 @@ export class SubscriptionsController {
   async update(
     @Param('id') id: string,
     @Body() updateSubscriptionDto: UpdateSubscriptionDto,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<SubscriptionResponseDto> {
     const subscription = await this.subscriptionsService.update(
       id,
       updateSubscriptionDto,
-      user.role as ValidRoles,
+      user.role as AuthRole,
       user.storeId,
     );
     return subscription;
@@ -242,11 +242,11 @@ export class SubscriptionsController {
   @ApiResponse({ status: 404, description: 'Subscription not found' })
   async remove(
     @Param('id') id: string,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<{ message: string }> {
     await this.subscriptionsService.remove(
       id,
-      user.role as ValidRoles,
+      user.role as AuthRole,
       user.storeId,
     );
     return { message: 'Subscription deleted successfully' };

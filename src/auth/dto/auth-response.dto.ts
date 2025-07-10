@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SuperAdminResponseDto {
   @ApiProperty({
@@ -62,29 +62,68 @@ export class UserResponseDto {
 
 export class AuthResponseDto {
   @ApiProperty({
+    description: 'User unique identifier',
+    example: '123e4567-e89b-12d3-a456-426614174000'
+  })
+  id: string;
+
+  @ApiProperty({
+    description: 'User email address',
+    example: 'admin@mobixi.com'
+  })
+  email: string;
+
+  @ApiProperty({
+    description: 'User first name',
+    example: 'John'
+  })
+  firstName: string;
+
+  @ApiProperty({
+    description: 'User last name',
+    example: 'Doe'
+  })
+  lastName: string;
+
+  @ApiProperty({
+    description: 'User role in the system',
+    enum: ['SUPER_ADMIN', 'STORE_ADMIN', 'USER'],
+    example: 'SUPER_ADMIN'
+  })
+  role: string;
+
+  @ApiProperty({
+    description: 'User permissions by module',
+    example: {
+      users: ['create', 'read', 'update', 'delete', 'manage'],
+      stores: ['create', 'read', 'update', 'delete', 'manage'],
+      products: ['create', 'read', 'update', 'delete', 'manage'],
+      subscriptions: ['create', 'read', 'update', 'delete', 'manage'],
+      deliveries: ['create', 'read', 'update', 'delete', 'manage'],
+      payments: ['create', 'read', 'update', 'delete', 'manage'],
+      reports: ['read', 'export', 'manage'],
+      settings: ['read', 'update', 'manage']
+    }
+  })
+  permissions: any;
+
+  @ApiPropertyOptional({
+    description: 'Store ID (only for STORE_ADMIN and USER roles)',
+    example: 'store-123'
+  })
+  storeId?: string;
+
+  @ApiProperty({
     description: 'JWT token for authentication',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEyM2U0NTY3LWU4OWItMTJkMy1hNDU2LTQyNjYxNDE3NDAwMCIsImVtYWlsIjoiYWRtaW5AbW9iaXhpLmNvbSIsInJvbGUiOiJTVVBFUl9BRE1JTiIsImlhdCI6MTYzNDU2Nzg5MCwiZXhwIjoxNjY2MTIzNDkwfQ.example'
   })
   token: string;
+}
 
+export class PasswordResetResponseDto {
   @ApiProperty({
-    description: 'SuperAdmin info',
-    type: SuperAdminResponseDto,
-    required: false,
+    description: 'Response message',
+    example: 'Password reset email sent'
   })
-  superAdmin?: SuperAdminResponseDto;
-
-  @ApiProperty({
-    description: 'StoreAdmin info',
-    type: StoreAdminResponseDto,
-    required: false,
-  })
-  storeAdmin?: StoreAdminResponseDto;
-
-  @ApiProperty({
-    description: 'User info',
-    type: UserResponseDto,
-    required: false,
-  })
-  user?: UserResponseDto;
+  message: string;
 }

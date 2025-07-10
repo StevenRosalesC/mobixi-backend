@@ -31,7 +31,7 @@ import { UserRoleGuard } from '../auth/guards/user-role.guard';
 import { RoleProtected } from '../auth/decorators/role-protected/role-protected.decorator';
 import { ValidRoles } from '../auth/interfaces/valid-roles';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
+import { AuthRole } from '../auth/dto/auth.dto';
 
 @ApiTags('payments')
 @Controller('payments')
@@ -60,11 +60,11 @@ export class PaymentsController {
   @ApiResponse({ status: 404, description: 'User or subscription not found' })
   async create(
     @Body() createPaymentDto: CreatePaymentDto,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<PaymentResponseDto> {
     const payment = await this.paymentsService.create(
       createPaymentDto,
-      user.role,
+      user.role as AuthRole,
       user.storeId,
     );
     return payment;
@@ -117,11 +117,11 @@ export class PaymentsController {
   })
   async findAll(
     @Query() query: PaymentQueryDto,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<PaymentListResponseDto> {
     const result = await this.paymentsService.findAll(
       query,
-      user.role,
+      user.role as AuthRole,
       user.storeId,
     );
     return result;
@@ -153,8 +153,8 @@ export class PaymentsController {
     status: 403,
     description: 'Forbidden - insufficient permissions',
   })
-  async getStats(@GetUser() user: JwtPayload) {
-    return await this.paymentsService.getPaymentStats(user.role, user.storeId);
+  async getStats(@GetUser() user: any) {
+    return await this.paymentsService.getPaymentStats(user.role as AuthRole, user.storeId);
   }
 
   @Get(':id')
@@ -175,11 +175,11 @@ export class PaymentsController {
   @ApiResponse({ status: 404, description: 'Payment not found' })
   async findOne(
     @Param('id') id: string,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<PaymentWithRelationsResponseDto> {
     const payment = await this.paymentsService.findOne(
       id,
-      user.role,
+      user.role as AuthRole,
       user.storeId,
     );
     return payment;
@@ -206,12 +206,12 @@ export class PaymentsController {
   async update(
     @Param('id') id: string,
     @Body() updatePaymentDto: UpdatePaymentDto,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<PaymentResponseDto> {
     const payment = await this.paymentsService.update(
       id,
       updatePaymentDto,
-      user.role,
+      user.role as AuthRole,
       user.storeId,
     );
     return payment;
@@ -234,9 +234,9 @@ export class PaymentsController {
   @ApiResponse({ status: 404, description: 'Payment not found' })
   async remove(
     @Param('id') id: string,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<{ message: string }> {
-    await this.paymentsService.remove(id, user.role, user.storeId);
+    await this.paymentsService.remove(id, user.role as AuthRole, user.storeId);
     return { message: 'Payment deleted successfully' };
   }
 }

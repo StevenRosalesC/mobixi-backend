@@ -3,106 +3,137 @@ import { ProductType } from './product.dto';
 
 export class ProductResponseDto {
   @ApiProperty({
-    description: 'ID único del producto',
-    example: 'clx1234567890abcdef',
+    description: 'Product unique identifier',
+    example: '123e4567-e89b-12d3-a456-426614174000'
   })
   id: string;
 
   @ApiProperty({
-    description: 'Nombre del producto',
-    example: 'Caja Sorpresa Premium',
+    description: 'Product name',
+    example: 'iPhone 15 Pro'
   })
   name: string;
 
-  @ApiPropertyOptional({
-    description: 'Descripción del producto',
-    example: 'Caja sorpresa con productos premium seleccionados',
+  @ApiProperty({
+    description: 'Product description',
+    example: 'Latest iPhone with advanced camera features and A17 Pro chip'
   })
-  description?: string;
-
-  @ApiPropertyOptional({
-    description: 'Código SKU del producto',
-    example: 'CS-PREM-001',
-  })
-  sku?: string;
+  description: string;
 
   @ApiProperty({
-    description: 'Precio del producto',
-    example: 49.99,
+    description: 'Product price in cents',
+    example: 99900
   })
   price: number;
 
   @ApiProperty({
-    description: 'Precio de costo del producto',
-    example: 35.0,
+    description: 'Product category',
+    example: 'electronics'
   })
-  costPrice: number;
+  category: string;
 
   @ApiProperty({
-    description: 'Tipo de producto',
+    description: 'Product type',
     enum: ProductType,
-    example: ProductType.PHYSICAL,
+    example: ProductType.PHYSICAL
   })
   type: ProductType;
 
   @ApiPropertyOptional({
-    description: 'Categoría del producto',
-    example: 'Premium',
+    description: 'Product image URL',
+    example: 'https://example.com/images/iphone15pro.jpg'
   })
-  category?: string;
+  imageUrl?: string;
 
   @ApiPropertyOptional({
-    description: 'URL de la imagen del producto',
-    example: 'https://example.com/image.jpg',
+    description: 'Product stock quantity',
+    example: 50
   })
-  image?: string;
+  stock?: number;
 
   @ApiProperty({
-    description: 'Estado activo del producto',
-    example: true,
+    description: 'Whether the product is active/available',
+    example: true
   })
   isActive: boolean;
 
   @ApiPropertyOptional({
-    description: 'Límite máximo de suscripciones',
-    example: 100,
+    description: 'Product SKU (Stock Keeping Unit)',
+    example: 'IPH15PRO-128GB-BLACK'
   })
-  maxSubscriptions?: number;
+  sku?: string;
+
+  @ApiPropertyOptional({
+    description: 'Product weight in grams',
+    example: 187
+  })
+  weight?: number;
+
+  @ApiPropertyOptional({
+    description: 'Product dimensions',
+    example: '147.7 x 71.5 x 7.85 mm'
+  })
+  dimensions?: string;
 
   @ApiProperty({
-    description: 'Fecha de creación',
-    example: '2024-01-15T10:30:00Z',
+    description: 'Store ID where the product belongs',
+    example: 'store-123'
+  })
+  storeId: string;
+
+  @ApiProperty({
+    description: 'Product creation timestamp',
+    example: '2024-01-15T10:30:00.000Z'
   })
   createdAt: Date;
 
   @ApiProperty({
-    description: 'Fecha de última actualización',
-    example: '2024-01-15T10:30:00Z',
+    description: 'Product last update timestamp',
+    example: '2024-01-20T14:45:00.000Z'
   })
   updatedAt: Date;
 }
 
 export class ProductPaginationDto {
   @ApiProperty({
-    description: 'Lista de productos',
-    type: [ProductResponseDto],
+    description: 'Array of products',
+    type: [ProductResponseDto]
   })
-  products: ProductResponseDto[];
+  data: ProductResponseDto[];
 
   @ApiProperty({
-    description: 'Información de paginación',
-    type: 'object',
-    properties: {
-      page: { type: 'number', example: 1 },
-      limit: { type: 'number', example: 10 },
-      total: { type: 'number', example: 25 },
-      pages: { type: 'number', example: 3 },
-    },
+    description: 'Total number of products matching the query',
+    example: 150
   })
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
+  total: number;
+
+  @ApiProperty({
+    description: 'Current page number',
+    example: 1
+  })
+  page: number;
+
+  @ApiProperty({
+    description: 'Number of items per page',
+    example: 10
+  })
+  limit: number;
+
+  @ApiProperty({
+    description: 'Total number of pages',
+    example: 15
+  })
+  totalPages: number;
+
+  @ApiProperty({
+    description: 'Whether there is a next page',
+    example: true
+  })
+  hasNextPage: boolean;
+
+  @ApiProperty({
+    description: 'Whether there is a previous page',
+    example: false
+  })
+  hasPrevPage: boolean;
 }

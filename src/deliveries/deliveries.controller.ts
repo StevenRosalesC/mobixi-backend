@@ -31,7 +31,7 @@ import { UserRoleGuard } from '../auth/guards/user-role.guard';
 import { RoleProtected } from '../auth/decorators/role-protected/role-protected.decorator';
 import { ValidRoles } from '../auth/interfaces/valid-roles';
 import { GetUser } from '../auth/decorators/get-user.decorator';
-import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
+import { AuthRole } from '../auth/dto/auth.dto';
 
 @ApiTags('deliveries')
 @Controller('deliveries')
@@ -63,11 +63,11 @@ export class DeliveriesController {
   })
   async create(
     @Body() createDeliveryDto: CreateDeliveryDto,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<DeliveryResponseDto> {
     const delivery = await this.deliveriesService.create(
       createDeliveryDto,
-      user.role,
+      user.role as AuthRole,
       user.storeId,
     );
     return delivery;
@@ -121,11 +121,11 @@ export class DeliveriesController {
   })
   async findAll(
     @Query() query: DeliveryQueryDto,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<DeliveryListResponseDto> {
     const result = await this.deliveriesService.findAll(
       query,
-      user.role,
+      user.role as AuthRole,
       user.storeId,
     );
     return result;
@@ -156,9 +156,9 @@ export class DeliveriesController {
     status: 403,
     description: 'Forbidden - insufficient permissions',
   })
-  async getStats(@GetUser() user: JwtPayload) {
+  async getStats(@GetUser() user: any) {
     return await this.deliveriesService.getDeliveryStats(
-      user.role,
+      user.role as AuthRole,
       user.storeId,
     );
   }
@@ -181,11 +181,11 @@ export class DeliveriesController {
   @ApiResponse({ status: 404, description: 'Delivery not found' })
   async findOne(
     @Param('id') id: string,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<DeliveryWithRelationsResponseDto> {
     const delivery = await this.deliveriesService.findOne(
       id,
-      user.role,
+      user.role as AuthRole,
       user.storeId,
     );
     return delivery;
@@ -212,12 +212,12 @@ export class DeliveriesController {
   async update(
     @Param('id') id: string,
     @Body() updateDeliveryDto: UpdateDeliveryDto,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<DeliveryResponseDto> {
     const delivery = await this.deliveriesService.update(
       id,
       updateDeliveryDto,
-      user.role,
+      user.role as AuthRole,
       user.storeId,
     );
     return delivery;
@@ -240,9 +240,9 @@ export class DeliveriesController {
   @ApiResponse({ status: 404, description: 'Delivery not found' })
   async remove(
     @Param('id') id: string,
-    @GetUser() user: JwtPayload,
+    @GetUser() user: any,
   ): Promise<{ message: string }> {
-    await this.deliveriesService.remove(id, user.role, user.storeId);
+    await this.deliveriesService.remove(id, user.role as AuthRole, user.storeId);
     return { message: 'Delivery deleted successfully' };
   }
 }

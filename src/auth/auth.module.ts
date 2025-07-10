@@ -1,36 +1,50 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthController } from './auth.controller';
+import { JwtModule } from '@nestjs/jwt';
+import { MailerModule } from '@nestjs-modules/mailer';
 import { AuthService } from './auth.service';
-import { JwtStrategy } from './jwt.strategy';
-import { PermissionGuard } from './guards/permission.guard';
+import { AuthController } from './auth.controller';
+import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserRoleGuard } from './guards/user-role.guard';
-import { StoreRequiredGuard } from './guards/store-required.guard';
+import { PermissionGuard } from './guards/permission.guard';
+import { EmailsService } from './services/emails.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
   imports: [
-    PassportModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('jwt.secret'),
-        signOptions: {
-          expiresIn: configService.get<string>('jwt.expiresIn'),
+      useFactory: () => ({
+        secret: process.env.JWT_SECRET,
+        signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || '365d' },
+      }),
+    }),
+    MailerModule.forRootAsync({
+      useFactory: () => ({
+        transport: {
+          host: process.env.MAIL_HOST,
+          port: parseInt(process.env.MAIL_PORT || '587'),
+          secure: false,
+          auth: {
+            user: process.env.MAIL_USER,
+            pass: process.env.MAIL_PASS,
+          },
+        },
+        defaults: {
+          from: process.env.MAIL_FROM,
         },
       }),
-      inject: [ConfigService],
     }),
   ],
-  controllers: [AuthController],
   providers: [
-    AuthService,
-    JwtStrategy,
+    AuthService, 
+    JwtStrategy, 
+    UserRoleGuard, 
     PermissionGuard,
-    UserRoleGuard,
-    StoreRequiredGuard,
+    EmailsService,
+    PrismaService,
   ],
-  exports: [AuthService, PermissionGuard, UserRoleGuard, StoreRequiredGuard],
+  exports: [AuthService, JwtStrategy, PassportModule, JwtModule],
+  controllers: [AuthController],
 })
 export class AuthModule {}

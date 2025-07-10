@@ -60,14 +60,17 @@ enum PaymentStatus {
 }
 
 model SuperAdmin {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  firstName String   @map("first_name")
-  lastName  String   @map("last_name")
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  firstName   String   @map("first_name")
+  lastName    String   @map("last_name")
+  role        String   @default("SUPER_ADMIN")
+  permissions Json     @default("{}")
+  isActive    Boolean  @default(true) @map("is_active")
+  resetToken  String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("super_admins")
 }
@@ -89,16 +92,19 @@ model Store {
 }
 
 model StoreAdmin {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  firstName String   @map("first_name")
-  lastName  String   @map("last_name")
-  isActive  Boolean  @default(true) @map("is_active")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  storeId   String   @map("store_id")
-  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  firstName   String   @map("first_name")
+  lastName    String   @map("last_name")
+  role        String   @default("STORE_ADMIN")
+  permissions Json     @default("{}")
+  isActive    Boolean  @default(true) @map("is_active")
+  resetToken  String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  storeId     String   @map("store_id")
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   @@map("store_admins")
 }
@@ -109,7 +115,10 @@ model User {
   password      String
   firstName     String         @map("first_name")
   lastName      String         @map("last_name")
+  role          String         @default("USER")
+  permissions   Json           @default("{}")
   isActive      Boolean        @default(true) @map("is_active")
+  resetToken    String?
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
   storeId       String         @map("store_id")
